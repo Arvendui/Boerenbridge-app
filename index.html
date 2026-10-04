@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="nl" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Boerenbridge Scorecard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        /* Remove browser spin buttons for clean numeric inputs */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="h-full bg-slate-50 text-slate-900 min-h-screen flex flex-col">
+
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-100">
+                    <i class="fa-solid fa-layer-group text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-slate-900 leading-tight">Boerenbridge</h1>
+                    <p class="text-xs text-slate-500 font-medium">Digitale Scorekaart & Helper</p>
+                </div>
+            </div>
+            <div id="header-actions" class="flex items-center space-x-2">
+                <!-- Action buttons injected dynamically -->
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 pb-24">
+        
+        <!-- TOAST NOTIFICATION -->
+        <div id="toast" class="hidden fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center space-x-3 transition-all duration-300">
+            <i id="toast-icon" class="fa-solid fa-circle-info text-indigo-400"></i>
+            <span id="toast-msg" class="text-sm font-medium"></span>
+        </div>
+
+        <div id="screen-setup" class="space-y-6">
+            <!-- Game Settings Card -->
+            <div class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-sm space-y-6">
+                <div class="border-b border-slate-100 pb-4 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-sliders text-indigo-600"></i> Spelinstellingen
+                        </h2>
+                        <p class="text-xs text-slate-500">Stel de regels en puntentelling in voor dit potje</p>
+                    </div>
+                    <button onclick="openHistoryModal()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 flex items-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-clock-rotate-left text-indigo-600"></i> Historie
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Cards per Round Settings -->
+                    <div class="space-y-4">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Kaartverdeling</label>
+                        
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <span class="text-xs text-slate-600 font-medium block mb-1">Min. Kaarten</span>
+                                <div class="flex items-center">
+                                    <button onclick="adjustSetting('minCards', -1)" class="w-10 h-10 rounded-l-lg bg-slate-100 text-slate-700 hover:bg-slate-200 flex items-center justify-center font-bold border border-r-0 border-slate-300 active:bg-slate-300">-</button>
+                                    <input type="number" id="setting-minCards" onchange="updateSettingFromInput('minCards', this.value)" class="w-full h-10 text-center font-bold border border-slate-300 text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                    <button onclick="adjustSetting('minCards', 1)" class="w-10 h-10 rounded-r-lg bg-slate-100 text-slate-700 hover:bg-slate-200 flex items-center justify-center font-bold border border-l-0 border-slate-300 active:bg-slate-300">+</button>
+                                </div>
+                            </div>
+                            <div>
+                                <span class="text-xs text-slate-600 font-medium block mb-1">Max. Kaarten</span>
+                                <div class="flex items-center">
+                                    <button onclick="adjustSetting('maxCards', -1)" class="w-10 h-10 rounded-l-lg bg-slate-100 text-slate-700 hover:bg-slate-200 flex items-center justify-center font-bold border border-r-0 border-slate-300 active:bg-slate-300">-</button>
+                                    <input type="number" id="setting-maxCards" onchange="updateSettingFromInput('maxCards', this.value)" class="w-full h-10 text-center font-bold border border-slate-300 text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                    <button onclick="adjustSetting('maxCards', 1)" class="w-10 h-10 rounded-r-lg bg-slate-100 text-slate-700 hover:bg-slate-200 flex items-center justify-center font-bold border border-l-0 border-slate-300 active:bg-slate-300">+</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <span class="text-xs text-slate-600 font-medium block mb-1">Rondestructuur</span>
+                            <div class="grid grid-cols-3 gap-2 p-1 bg-slate-100 rounded-xl border border-slate-200">
+                                <button onclick="setStructure('updown')" id="struct-updown" class="py-2 text-xs font-bold rounded-lg transition-all">Op & Neer</button>
+                                <button onclick="setStructure('up')" id="struct-up" class="py-2 text-xs font-bold rounded-lg transition-all">Alleen Op</button>
+                                <button onclick="setStructure('down')" id="struct-down" class="py-2 text-xs font-bold rounded-lg transition-all">Alleen Neer</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Points Calculation Settings -->
+                    <div class="space-y-4">
+                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Puntentelling & Regels</label>
+
+                        <div class="grid grid-cols-3 gap-2">
+                            <div>
+                                <span class="text-xs text-slate-600 font-medium block mb-1">Basis Juist</span>
+                                <input type="number" id="setting-basePoints" onchange="updateSettingFromInput('basePoints', this.value)" class="w-full h-10 px-2 text-center font-bold border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <span class="text-xs text-slate-600 font-medium block mb-1">Per Slag</span>
+                                <input type="number" id="setting-pointsPerTrick" onchange="updateSettingFromInput('pointsPerTrick', this.value)" class="w-full h-10 px-2 text-center font-bold border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <span class="text-xs text-slate-600 font-medium block mb-1">Straf / Afwijking</span>
+                                <input type="number" id="setting-penaltyPerTrick" onchange="updateSettingFromInput('penaltyPerTrick', this.value)" class="w-full h-10 px-2 text-center font-bold border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                        </div>
+
+                        <!-- Rule Toggles -->
+                        <div class="space-y-3 pt-2">
+                            <label class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-100 transition-colors">
+                                <span class="text-xs font-semibold text-slate-800">
+                                    <i class="fa-solid fa-ban text-amber-500 mr-1.5"></i> "Verboden Som" Regel (Deler)
+                                </span>
+                                <input type="checkbox" id="setting-forbiddenSum" onchange="toggleSetting('forbiddenSum')" class="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                            </label>
+
+                            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-semibold text-slate-800">
+                                        <i class="fa-solid fa-triangle-exclamation text-rose-500 mr-1.5"></i> Strafpunten Systeem
+                                    </span>
+                                    <input type="checkbox" id="setting-penaltiesEnabled" onchange="toggleSetting('penaltiesEnabled')" class="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                                </div>
+                                <div id="penalty-value-box" class="flex items-center justify-between pt-2 border-t border-slate-200 hidden">
+                                    <span class="text-xs text-slate-600">Strafpunten per overtreding:</span>
+                                    <div class="flex items-center w-32">
+                                        <button onclick="adjustSetting('penaltyValue', -5)" class="w-8 h-8 rounded-l bg-slate-200 text-slate-700 font-bold">-</button>
+                                        <input type="number" id="setting-penaltyValue" onchange="updateSettingFromInput('penaltyValue', this.value)" class="w-full h-8 text-center text-xs font-bold border-y border-slate-300">
+                                        <button onclick="adjustSetting('penaltyValue', 5)" class="w-8 h-8 rounded-r bg-slate-200 text-slate-700 font-bold">+</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-200 shadow-sm space-y-6">
+                <div class="border-b border-slate-100 pb-4 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-users text-indigo-600"></i> Spelers (2 - 10)
+                        </h2>
+                        <p class="text-xs text-slate-500">Voeg spelers toe, verander volgorde of kies de eerste deler</p>
+                    </div>
+                    <span id="player-count-badge" class="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-bold">0 Spelers</span>
+                </div>
+
+                <!-- Player Setup List -->
+                <div id="player-setup-list" class="space-y-3">
+                    <!-- Injected dynamically -->
+                </div>
+
+                <!-- Add Player Input -->
+                <div class="flex gap-2 pt-2">
+                    <input type="text" id="new-player-name" placeholder="Naam nieuwe speler..." onkeypress="if(event.key==='Enter') addPlayer()" class="flex-1 px-4 py-3 border border-slate-300 rounded-xl text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-slate-50 focus:bg-white transition-all">
+                    <button onclick="addPlayer()" class="px-5 py-3 bg-indigo-600 text-white font-bold text-sm rounded-xl hover:bg-indigo-700 active:scale-95 transition-all flex items-center gap-2 shadow-sm">
+                        <i class="fa-solid fa-plus"></i> Voeg Toe
+                    </button>
+                </div>
+            </div>
+
+            <!-- Start Game Button -->
+            <button onclick="startGame()" class="w-full py-4 bg-emerald-600 text-white font-extrabold text-base rounded-2xl hover:bg-emerald-700 active:scale-[0.99] transition-all shadow-lg shadow-emerald-100 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-play text-lg"></i> Start Het Spel!
+            </button>
+        </div>
+
+        <div id="screen-game" class="hidden space-y-6">
+            
+            <!-- Round Progress & Info Header -->
+            <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center space-x-4 w-full sm:w-auto justify-between sm:justify-start">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block">Ronde</span>
+                        <div class="flex items-baseline gap-1">
+                            <span id="game-current-round" class="text-3xl font-extrabold text-slate-900">1</span>
+                            <span id="game-total-rounds" class="text-sm font-semibold text-slate-400">/ 20</span>
+                        </div>
+                    </div>
+                    <div class="h-8 w-px bg-slate-200"></div>
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400 block">Aantal Kaarten</span>
+                        <div class="flex items-center gap-2">
+                            <span id="game-cards-count" class="text-2xl font-bold text-indigo-600">1</span>
+                            <i class="fa-solid fa-clone text-slate-400 text-sm"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                    <button onclick="showLeaderboard()" class="flex-1 sm:flex-none px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 border border-slate-200">
+                        <i class="fa-solid fa-trophy text-amber-500"></i> Stand
+                    </button>
+                    <button id="undo-round-btn" onclick="undoLastRound()" class="flex-1 sm:flex-none px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed">
+                        <i class="fa-solid fa-rotate-left text-slate-500"></i> Undo
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stage Info Banner -->
+            <div id="stage-banner" class="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div id="stage-badge-icon" class="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold text-sm">
+                        1
+                    </div>
+                    <div>
+                        <h3 id="stage-title" class="font-bold text-slate-900 text-sm">Fase 1: Voorspellingen Invoeren</h3>
+                        <p id="stage-subtitle" class="text-xs text-slate-500">Voer in hoeveel slagen elke speler denkt te halen</p>
+                    </div>
+                </div>
+                <div id="dealer-indicator" class="text-xs bg-amber-100 border border-amber-200 text-amber-800 font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                    <i class="fa-solid fa-crown text-amber-500"></i> <span id="dealer-name">Deler: -</span>
+                </div>
+            </div>
+
+            <!-- Bids / Tricks Inputs List -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="p-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    <span>Speler Status & Naam</span>
+                    <span id="input-column-title">Voorspelling (Bood)</span>
+                </div>
+
+                <div id="round-inputs-list" class="divide-y divide-slate-100">
+                    <!-- Dynamic inputs injected here -->
+                </div>
+
+                <!-- Input Summary & Validation Bar -->
+                <div id="round-summary-bar" class="p-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm">
+                    <div id="summary-text" class="font-semibold text-slate-700 flex items-center gap-2">
+                        <!-- Validation message -->
+                    </div>
+                    <button id="submit-round-btn" onclick="submitCurrentStage()" class="w-full sm:w-auto px-6 py-3 bg-indigo-600 text-white font-extrabold text-sm rounded-xl hover:bg-indigo-700 active:scale-95 transition-all shadow-md shadow-indigo-100 flex items-center justify-center gap-2">
+                        <span>Volgende Fase</span> <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Scorecard Table -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden space-y-3">
+                <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+                    <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-table-list text-indigo-600"></i> Tussenstand & Verloop
+                    </h3>
+                    <span class="text-xs text-slate-400 font-medium">Format: Bood (Behaald) = Punten</span>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 uppercase font-bold border-b border-slate-200" id="scoreboard-header-row">
+                                <!-- Headers injected -->
+                            </tr>
+                        </thead>
+                        <tbody id="scoreboard-body-rows" class="divide-y divide-slate-100 text-slate-700 font-medium">
+                            <!-- Rows injected -->
+                        </tbody>
+                        <tfoot>
+                            <tr id="scoreboard-footer-row" class="bg-slate-100 font-extrabold text-slate-900 text-sm border-t-2 border-slate-300">
+                                <!-- Totals & Player Names injected -->
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-gameover" class="hidden bg-white rounded-2xl p-6 sm:p-8 border border-slate-200 shadow-lg text-center space-y-6 max-w-xl mx-auto">
+            <div class="w-20 h-20 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto text-4xl shadow-inner">
+                <i class="fa-solid fa-trophy"></i>
+            </div>
+
+            <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-amber-600 block mb-1">Gefeliciteerd!</span>
+                <h2 id="winner-name" class="text-3xl font-extrabold text-slate-900">Speler Wint!</h2>
+                <p id="winner-score" class="text-sm text-slate-500 mt-1">Eindscore: 0 punten</p>
+            </div>
+
+            <!-- Podium List -->
+            <div id="final-leaderboard" class="space-y-2 text-left bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <!-- Final results injected -->
+            </div>
+
+            <div class="flex gap-3 pt-2">
+                <button onclick="resetGameToSetup()" class="flex-1 py-3 bg-slate-100 text-slate-700 font-bold text-sm rounded-xl hover:bg-slate-200 transition-all border border-slate-200">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> Nieuw Spel
+                </button>
+                <button onclick="openRematchModal()" class="flex-1 py-3 bg-indigo-600 text-white font-bold text-sm rounded-xl hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100">
+                    <i class="fa-solid fa-arrows-rotate mr-1"></i> Revanche (Nieuw Spel)
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    
+    <!-- PENALTY MANAGEMENT MODAL -->
+    <div id="penalty-modal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation text-rose-500"></i> Strafpunten Beheer
+                </h3>
+                <button onclick="closePenaltyModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">&times;</button>
+            </div>
+            
+            <p class="text-xs text-slate-500">Ken strafpunten toe bij een overtreding, of herstel eenvoudig verkeerd toegekende strafpunten.</p>
+
+            <div id="penalty-player-select" class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                <!-- Players inserted here -->
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                <button onclick="closePenaltyModal()" class="px-4 py-2 bg-slate-100 text-slate-700 font-bold text-xs rounded-xl hover:bg-slate-200">Sluiten</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- REMATCH SELECT DEALER MODAL -->
+    <div id="rematch-modal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4 text-center">
+            <div class="w-12 h-12 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto text-xl">
+                <i class="fa-solid fa-crown"></i>
+            </div>
+
+            <div>
+                <h3 class="font-extrabold text-slate-900 text-lg">Revanche: Kies Eerste Deler</h3>
+                <p class="text-xs text-slate-500 mt-1">Selecteer wie in het nieuwe spel mag beginnen als deler</p>
+            </div>
+
+            <div id="rematch-dealer-list" class="space-y-2 text-left max-h-60 overflow-y-auto pr-1">
+                <!-- Player selection for rematch -->
+            </div>
+
+            <div class="flex gap-2 pt-2 border-t border-slate-100">
+                <button onclick="closeRematchModal()" class="flex-1 py-2.5 bg-slate-100 text-slate-700 font-bold text-xs rounded-xl hover:bg-slate-200 transition-all">
+                    Annuleren
+                </button>
+                <button onclick="confirmRematch()" class="flex-1 py-2.5 bg-indigo-600 text-white font-bold text-xs rounded-xl hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100">
+                    Start Revanche
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- GAME HISTORY ARCHIVE MODAL -->
+    <div id="history-modal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 space-y-4 max-h-[85vh] flex flex-col">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3 flex-shrink-0">
+                <h3 class="font-bold text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left text-indigo-600"></i> Spelhistorie & Archief
+                </h3>
+                <button onclick="closeHistoryModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">&times;</button>
+            </div>
+
+            <div id="history-game-list" class="space-y-3 overflow-y-auto flex-1 pr-1">
+                <!-- Injected history items -->
+            </div>
+
+            <div class="flex justify-between items-center pt-3 border-t border-slate-100 flex-shrink-0">
+                <button onclick="clearAllHistory()" class="text-rose-600 hover:text-rose-700 font-bold text-xs flex items-center gap-1">
+                    <i class="fa-solid fa-trash-can"></i> Historie Wissen
+                </button>
+                <button onclick="closeHistoryModal()" class="px-4 py-2 bg-slate-100 text-slate-700 font-bold text-xs rounded-xl hover:bg-slate-200">
+                    Sluiten
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EARLY END GAME CONFIRMATION MODAL -->
+    <div id="endgame-modal" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4 text-center">
+            <div class="w-14 h-14 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto text-2xl">
+                <i class="fa-solid fa-flag-checkered"></i>
+            </div>
+
+            <h3 class="font-extrabold text-slate-900 text-lg">Spel Vroegtijdig Beëindigen?</h3>
+            <p class="text-xs text-slate-500 leading-relaxed">
+                Weet je zeker dat je het spel direct wilt stopzetten? De huidige tussenstand wordt de definitieve eindstand en het spel wordt opgeslagen in de historie.
+            </p>
+
+            <div class="flex gap-2 pt-2">
+                <button onclick="closeEndGameModal()" class="flex-1 py-3 bg-slate-100 text-slate-700 font-bold text-xs rounded-xl hover:bg-slate-200 transition-all">
+                    Annuleren
+                </button>
+                <button onclick="confirmEarlyEndGame()" class="flex-1 py-3 bg-rose-600 text-white font-bold text-xs rounded-xl hover:bg-rose-700 transition-all shadow-md shadow-rose-100">
+                    Ja, Stop Spel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DEFAULT CONFIGURATION
+        const DEFAULT_SETTINGS = {
+            minCards: 1,
+            maxCards: 10,
+            structure: 'updown', // 'updown', 'up', 'down'
+            basePoints: 5,
+            pointsPerTrick: 5,
+            penaltyPerTrick: 5,
+            forbiddenSum: true,
+            penaltiesEnabled: true,
+            penaltyValue: 5
+        };
+
+        // APPLICATION STATE
+        let state = {
+            settings: { ...DEFAULT_SETTINGS },
+            players: [], // { id, name, active: true, firstDealer: false }
+            gameStarted: false,
+            currentRoundIndex: 0,
+            stage: 'bidding', // 'bidding' | 'tricks'
+            rounds: [],
+            history: [],
+            savedGames: [] // Archief van oude spellen
+        };
+
+        const STORAGE_KEY = 'boerenbridge_app_state_v6';
+
+        // ON PAGE LOAD
+        window.onload = function() {
+            loadState();
+            if (!state.players || state.players.length === 0) {
+                state.players = [
+                    { id: 'p1', name: 'Speler 1', active: true, firstDealer: true },
+                    { id: 'p2', name: 'Speler 2', active: true, firstDealer: false },
+                    { id: 'p3', name: 'Speler 3', active: true, firstDealer: false },
+                    { id: 'p4', name: 'Speler 4', active: true, firstDealer: false }
+                ];
+            }
+            renderHeaderActions();
+            renderSetupScreen();
+            
+            if (state.gameStarted) {
+                switchScreen('game');
+                renderGameScreen();
+            } else {
+                switchScreen('setup');
+            }
+        };
+
+        function saveState() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+
+        function loadState() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    state = JSON.parse(saved);
+                    if (!state.savedGames) state.savedGames = [];
+                } catch(e) {
+                    console.error("Fout bij laden van opgeslagen staat", e);
+                }
+            }
+        }
+
+        function showToast(message, iconClass = "fa-circle-info text-indigo-400") {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = message;
+            document.getElementById('toast-icon').className = `fa-solid ${iconClass}`;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+
+        function switchScreen(screen) {
+            document.getElementById('screen-setup').classList.add('hidden');
+            document.getElementById('screen-game').classList.add('hidden');
+            document.getElementById('screen-gameover').classList.add('hidden');
+
+            if (screen === 'setup') document.getElementById('screen-setup').classList.remove('hidden');
+            if (screen === 'game') document.getElementById('screen-game').classList.remove('hidden');
+            if (screen === 'gameover') document.getElementById('screen-gameover').classList.remove('hidden');
+
+            renderHeaderActions();
+        }
+
+        function renderHeaderActions() {
+            const container = document.getElementById('header-actions');
+            container.innerHTML = '';
+
+            if (state.gameStarted) {
+                // Early Game End Button
+                const stopBtn = document.createElement('button');
+                stopBtn.className = "px-3 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all";
+                stopBtn.innerHTML = '<i class="fa-solid fa-flag-checkered"></i> <span class="hidden sm:inline">Spel Beëindigen</span>';
+                stopBtn.onclick = openEndGameModal;
+                container.appendChild(stopBtn);
+
+                if (state.settings.penaltiesEnabled) {
+                    const penBtn = document.createElement('button');
+                    penBtn.className = "px-3 py-1.5 bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all";
+                    penBtn.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-amber-500"></i> <span class="hidden sm:inline">Straf Beheer</span>';
+                    penBtn.onclick = openPenaltyModal;
+                    container.appendChild(penBtn);
+                }
+
+                const resetBtn = document.createElement('button');
+                resetBtn.className = "px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold text-xs rounded-xl flex items-center gap-1.5 transition-all";
+                resetBtn.innerHTML = '<i class="fa-solid fa-gear"></i> <span class="hidden sm:inline">Instellingen</span>';
+                resetBtn.onclick = () => {
+                    if (confirm("Wil je terug naar instellingen? Huidige spelvoortgang blijft bewaard.")) {
+                        switchScreen('setup');
+                    }
+                };
+                container.appendChild(resetBtn);
+            }
+        }
+
+        // SETUP & SETTINGS LOGIC
+        function adjustSetting(key, delta) {
+            let val = state.settings[key] + delta;
+            if (key === 'minCards') {
+                if (val < 1) val = 1;
+                if (val > state.settings.maxCards) val = state.settings.maxCards;
+            }
+            if (key === 'maxCards') {
+                const activeCount = state.players.filter(p => p.active).length || 2;
+                const absoluteMax = Math.floor(52 / activeCount);
+                if (val < state.settings.minCards) val = state.settings.minCards;
+                if (val > absoluteMax) val = absoluteMax;
+            }
+            if (key === 'penaltyValue' && val < 1) val = 1;
+            
+            state.settings[key] = val;
+            saveState();
+            renderSetupScreen();
+        }
+
+        function updateSettingFromInput(key, rawVal) {
+            let val = parseInt(rawVal, 10);
+            if (isNaN(val)) return renderSetupScreen();
+
+            const activeCount = state.players.filter(p => p.active).length || 2;
+            const absoluteMax = Math.floor(52 / activeCount);
+
+            if (key === 'minCards') {
+                if (val < 1) val = 1;
+                if (val > state.settings.maxCards) val = state.settings.maxCards;
+            } else if (key === 'maxCards') {
+                if (val < state.settings.minCards) val = state.settings.minCards;
+                if (val > absoluteMax) val = absoluteMax;
+            } else if (key === 'penaltyValue') {
+                if (val < 0) val = 0;
+            }
+
+            state.settings[key] = val;
+            saveState();
+            renderSetupScreen();
+        }
+
+        function setStructure(struct) {
+            state.settings.structure = struct;
+            saveState();
+            renderSetupScreen();
+        }
+
+        function toggleSetting(key) {
+            state.settings[key] = !state.settings[key];
+            saveState();
+            renderSetupScreen();
+        }
+
+        function renderSetupScreen() {
+            const activeCount = state.players.filter(p => p.active).length || 2;
+            const absoluteMax = Math.floor(52 / activeCount);
+
+            if (state.settings.maxCards > absoluteMax) {
+                state.settings.maxCards = absoluteMax;
+            }
+            if (state.settings.minCards > state.settings.maxCards) {
+                state.settings.minCards = state.settings.maxCards;
+            }
+
+            document.getElementById('setting-minCards').value = state.settings.minCards;
+            document.getElementById('setting-maxCards').value = state.settings.maxCards;
+            document.getElementById('setting-basePoints').value = state.settings.basePoints;
+            document.getElementById('setting-pointsPerTrick').value = state.settings.pointsPerTrick;
+            document.getElementById('setting-penaltyPerTrick').value = state.settings.penaltyPerTrick;
+            document.getElementById('setting-forbiddenSum').checked = state.settings.forbiddenSum;
+            document.getElementById('setting-penaltiesEnabled').checked = state.settings.penaltiesEnabled;
+            document.getElementById('setting-penaltyValue').value = state.settings.penaltyValue;
+
+            ['updown', 'up', 'down'].forEach(st => {
+                const btn = document.getElementById(`struct-${st}`);
+                if (state.settings.structure === st) {
+                    btn.className = "py-2 text-xs font-bold rounded-lg transition-all bg-white text-indigo-600 shadow-sm border border-slate-200";
+                } else {
+                    btn.className = "py-2 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-800";
+                }
+            });
+
+            const penBox = document.getElementById('penalty-value-box');
+            if (state.settings.penaltiesEnabled) penBox.classList.remove('hidden');
+            else penBox.classList.add('hidden');
+
+            const playerListContainer = document.getElementById('player-setup-list');
+            playerListContainer.innerHTML = '';
+
+            document.getElementById('player-count-badge').innerText = `${state.players.length} Spelers`;
+
+            state.players.forEach((p, idx) => {
+                const item = document.createElement('div');
+                item.className = `flex items-center justify-between p-3 rounded-xl border transition-all ${p.active ? 'bg-white border-slate-200' : 'bg-slate-100 border-slate-200 opacity-60'}`;
+                
+                item.innerHTML = `
+                    <div class="flex items-center space-x-3 flex-1 min-w-0">
+                        <button onclick="setFirstDealer('${p.id}')" title="Kies als Eerste Deler" class="p-2 rounded-lg transition-colors ${p.firstDealer ? 'text-amber-500 bg-amber-50 border border-amber-200' : 'text-slate-300 hover:text-slate-400'}">
+                            <i class="fa-solid fa-crown text-base pointer-events-none"></i>
+                        </button>
+                        <input type="text" value="${escapeHtml(p.name)}" onchange="renamePlayer('${p.id}', this.value)" class="font-bold text-slate-900 text-sm bg-transparent border-b border-transparent focus:border-indigo-500 focus:outline-none w-full truncate">
+                    </div>
+
+                    <div class="flex items-center space-x-1 sm:space-x-2 ml-2">
+                        <button onclick="togglePlayerActive('${p.id}')" class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${p.active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-200 text-slate-600'}">
+                            ${p.active ? '<i class="fa-solid fa-check mr-1"></i>Actief' : 'Pauze'}
+                        </button>
+
+                        <div class="flex items-center bg-slate-100 rounded-lg border border-slate-200">
+                            <button onclick="movePlayer('${p.id}', -1)" ${idx === 0 ? 'disabled' : ''} class="px-2 py-1 text-slate-600 hover:text-slate-900 disabled:opacity-30"><i class="fa-solid fa-arrow-up text-xs"></i></button>
+                            <button onclick="movePlayer('${p.id}', 1)" ${idx === state.players.length - 1 ? 'disabled' : ''} class="px-2 py-1 text-slate-600 hover:text-slate-900 disabled:opacity-30"><i class="fa-solid fa-arrow-down text-xs"></i></button>
+                        </div>
+
+                        <button onclick="removePlayer('${p.id}')" class="p-2 text-slate-400 hover:text-rose-600 transition-colors">
+                            <i class="fa-solid fa-trash-can text-sm"></i>
+                        </button>
+                    </div>
+                `;
+                playerListContainer.appendChild(item);
+            });
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        function addPlayer() {
+            const input = document.getElementById('new-player-name');
+            const name = input.value.trim();
+            if (!name) return;
+
+            if (state.players.length >= 10) {
+                showToast("Maximaal 10 spelers toegestaan!", "fa-circle-exclamation text-amber-400");
+                return;
+            }
+
+            const isFirst = state.players.length === 0;
+            state.players.push({
+                id: 'p_' + Date.now(),
+                name: name,
+                active: true,
+                firstDealer: isFirst
+            });
+
+            input.value = '';
+            saveState();
+            renderSetupScreen();
+        }
+
+        function removePlayer(id) {
+            if (state.players.length <= 2) {
+                showToast("Minimaal 2 spelers vereist!", "fa-circle-exclamation text-amber-400");
+                return;
+            }
+            const wasFirstDealer = state.players.find(p => p.id === id)?.firstDealer;
+            state.players = state.players.filter(p => p.id !== id);
+
+            if (wasFirstDealer && state.players.length > 0) {
+                state.players[0].firstDealer = true;
+            }
+
+            saveState();
+            renderSetupScreen();
+        }
+
+        function renamePlayer(id, newName) {
+            const p = state.players.find(p => p.id === id);
+            if (p && newName.trim()) {
+                p.name = newName.trim();
+                saveState();
+            }
+        }
+
+        function togglePlayerActive(id) {
+            const activeCount = state.players.filter(p => p.active).length;
+            const p = state.players.find(p => p.id === id);
+
+            if (p.active && activeCount <= 2) {
+                showToast("Er moeten minimaal 2 actieve spelers zijn!", "fa-circle-exclamation text-amber-400");
+                return;
+            }
+
+            p.active = !p.active;
+            saveState();
+            if (state.gameStarted) {
+                renderGameScreen();
+            } else {
+                renderSetupScreen();
+            }
+        }
+
+        function movePlayer(id, dir) {
+            const idx = state.players.findIndex(p => p.id === id);
+            if (idx < 0) return;
+            const targetIdx = idx + dir;
+            if (targetIdx < 0 || targetIdx >= state.players.length) return;
+
+            const temp = state.players[idx];
+            state.players[idx] = state.players[targetIdx];
+            state.players[targetIdx] = temp;
+
+            saveState();
+            renderSetupScreen();
+        }
+
+        function setFirstDealer(id) {
+            state.players.forEach(p => p.firstDealer = (p.id === id));
+            saveState();
+            renderSetupScreen();
+        }
+
+        function startGame() {
+            const activePlayers = state.players.filter(p => p.active);
+            if (activePlayers.length < 2) {
+                showToast("Minimaal 2 actieve spelers nodig om te starten!", "fa-circle-exclamation text-amber-400");
+                return;
+            }
+
+            let cardSequence = [];
+            const min = state.settings.minCards;
+            const max = state.settings.maxCards;
+
+            if (state.settings.structure === 'updown') {
+                for (let c = min; c <= max; c++) cardSequence.push(c);
+                for (let c = max - 1; c >= min; c--) cardSequence.push(c);
+            } else if (state.settings.structure === 'up') {
+                for (let c = min; c <= max; c++) cardSequence.push(c);
+            } else if (state.settings.structure === 'down') {
+                for (let c = max; c >= min; c--) cardSequence.push(c);
+            }
+
+            let dealerIdx = state.players.findIndex(p => p.firstDealer);
+            if (dealerIdx < 0 || !state.players[dealerIdx].active) {
+                dealerIdx = state.players.findIndex(p => p.active);
+            }
+
+            state.rounds = [];
+            cardSequence.forEach((cards, i) => {
+                let currentDealer = state.players[dealerIdx];
+                state.rounds.push({
+                    number: i + 1,
+                    cards: cards,
+                    dealerId: currentDealer.id
+                });
+
+                do {
+                    dealerIdx = (dealerIdx + 1) % state.players.length;
+                } while (!state.players[dealerIdx].active);
+            });
+
+            state.gameStarted = true;
+            state.currentRoundIndex = 0;
+            state.stage = 'bidding';
+            state.history = [];
+
+            saveState();
+            switchScreen('game');
+            renderGameScreen();
+        }
+
+        let currentInputs = {};
+
+        function renderGameScreen() {
+            const currentRound = state.rounds[state.currentRoundIndex];
+            if (!currentRound) {
+                finishGame();
+                return;
+            }
+
+            document.getElementById('game-current-round').innerText = state.currentRoundIndex + 1;
+            document.getElementById('game-total-rounds').innerText = `/ ${state.rounds.length}`;
+            document.getElementById('game-cards-count').innerText = currentRound.cards;
+
+            const dealer = state.players.find(p => p.id === currentRound.dealerId);
+            document.getElementById('dealer-name').innerText = `Deler: ${dealer ? dealer.name : '-'}`;
+
+            const stageBadge = document.getElementById('stage-badge-icon');
+            const stageTitle = document.getElementById('stage-title');
+            const stageSubtitle = document.getElementById('stage-subtitle');
+            const colTitle = document.getElementById('input-column-title');
+
+            if (state.stage === 'bidding') {
+                stageBadge.innerText = '1';
+                stageBadge.className = 'w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold text-sm';
+                stageTitle.innerText = 'Fase 1: Voorspellingen Invoeren';
+                stageSubtitle.innerText = `Hoeveel slagen denkt iedereen te halen met ${currentRound.cards} kaart(en)?`;
+                colTitle.innerText = 'Voorspelling (Bood)';
+            } else {
+                stageBadge.innerText = '2';
+                stageBadge.className = 'w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold text-sm';
+                stageTitle.innerText = 'Fase 2: Gehaalde Slagen Invoeren';
+                stageSubtitle.innerText = `Hoeveel slagen heeft iedereen daadwerkelijk gehaald?`;
+                colTitle.innerText = 'Gehaald';
+            }
+
+            document.getElementById('undo-round-btn').disabled = (state.currentRoundIndex === 0 && state.stage === 'bidding');
+
+            renderInputList(currentRound);
+            renderScoreboard();
+        }
+
+        function renderInputList(currentRound) {
+            const container = document.getElementById('round-inputs-list');
+            container.innerHTML = '';
+
+            state.players.forEach(p => {
+                const isDealer = (p.id === currentRound.dealerId);
+                const currentVal = (currentInputs[p.id] !== undefined) ? currentInputs[p.id] : 0;
+
+                const row = document.createElement('div');
+                row.className = `flex items-center justify-between p-3 sm:p-4 transition-colors ${p.active ? 'hover:bg-slate-50' : 'bg-slate-100/70 opacity-60'}`;
+
+                row.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <button onclick="togglePlayerActive('${p.id}')" title="${p.active ? 'Zet speler op pauze voor deze ronde' : 'Hervat speler'}" 
+                                class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${p.active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100' : 'bg-amber-100 text-amber-800 border border-amber-300'}">
+                            <i class="fa-solid ${p.active ? 'fa-pause' : 'fa-play'} mr-1"></i> ${p.active ? 'Actief' : 'Pauze'}
+                        </button>
+                        <span class="font-bold ${p.active ? 'text-slate-900' : 'text-slate-500'} text-sm">${escapeHtml(p.name)}</span>
+                        ${isDealer && p.active ? '<span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-[10px] font-bold border border-amber-200"><i class="fa-solid fa-crown text-[9px] mr-1"></i>Deler</span>' : ''}
+                    </div>
+
+                    ${p.active ? `
+                        <div class="flex items-center space-x-2">
+                            <button onclick="adjustInputValue('${p.id}', -1)" class="w-10 h-10 rounded-xl bg-slate-100 border border-slate-300 text-slate-700 font-extrabold text-base hover:bg-slate-200 active:bg-slate-300 transition-all flex items-center justify-center">-</button>
+                            
+                            <input type="number" min="0" max="${currentRound.cards}" id="input-val-${p.id}" value="${currentVal}" 
+                                onchange="directInputChanged('${p.id}', this.value)" 
+                                class="w-16 h-10 text-center font-extrabold text-lg border border-slate-300 rounded-xl bg-white text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+
+                            <button onclick="adjustInputValue('${p.id}', 1)" class="w-10 h-10 rounded-xl bg-slate-100 border border-slate-300 text-slate-700 font-extrabold text-base hover:bg-slate-200 active:bg-slate-300 transition-all flex items-center justify-center">+</button>
+                        </div>
+                    ` : `
+                        <div class="text-xs font-bold text-slate-400 italic pr-4">
+                            Doet niet mee deze ronde (-)
+                        </div>
+                    `}
+                `;
+                container.appendChild(row);
+            });
+
+            validateCurrentStage();
+        }
+
+        function adjustInputValue(playerId, delta) {
+            const currentRound = state.rounds[state.currentRoundIndex];
+            let val = (currentInputs[playerId] !== undefined ? currentInputs[playerId] : 0) + delta;
+            if (val < 0) val = 0;
+            if (val > currentRound.cards) val = currentRound.cards;
+
+            currentInputs[playerId] = val;
+            const inputElem = document.getElementById(`input-val-${playerId}`);
+            if (inputElem) inputElem.value = val;
+
+            validateCurrentStage();
+        }
+
+        function directInputChanged(playerId, rawVal) {
+            const currentRound = state.rounds[state.currentRoundIndex];
+            let val = parseInt(rawVal, 10);
+            if (isNaN(val) || val < 0) val = 0;
+            if (val > currentRound.cards) val = currentRound.cards;
+
+            currentInputs[playerId] = val;
+            const inputElem = document.getElementById(`input-val-${playerId}`);
+            if (inputElem) inputElem.value = val;
+
+            validateCurrentStage();
+        }
+
+        function validateCurrentStage() {
+            const currentRound = state.rounds[state.currentRoundIndex];
+            const activePlayers = state.players.filter(p => p.active);
+            const summaryText = document.getElementById('summary-text');
+            const submitBtn = document.getElementById('submit-round-btn');
+
+            let total = 0;
+            activePlayers.forEach(p => {
+                total += (currentInputs[p.id] !== undefined ? currentInputs[p.id] : 0);
+            });
+
+            if (state.stage === 'bidding') {
+                const dealerActive = activePlayers.some(p => p.id === currentRound.dealerId);
+                const forbiddenVal = currentRound.cards - (total - (currentInputs[currentRound.dealerId] || 0));
+
+                if (state.settings.forbiddenSum && dealerActive && total === currentRound.cards) {
+                    summaryText.innerHTML = `<span class="text-amber-600"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Deler mag geen <strong>${forbiddenVal < 0 ? 0 : forbiddenVal}</strong> bieden ("Verboden Som"). Totaal: ${total}/${currentRound.cards}</span>`;
+                    submitBtn.disabled = true;
+                    submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                } else {
+                    summaryText.innerHTML = `<span class="text-slate-600">Totaal geboden slagen: <strong class="text-slate-900">${total}</strong> (beschikbaar: ${currentRound.cards})</span>`;
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            } else {
+                if (total !== currentRound.cards) {
+                    summaryText.innerHTML = `<span class="text-rose-600 font-bold"><i class="fa-solid fa-circle-xmark mr-1"></i> Totaal slagen moet exact ${currentRound.cards} zijn! (Nu: ${total})</span>`;
+                    submitBtn.disabled = true;
+                    submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                } else {
+                    summaryText.innerHTML = `<span class="text-emerald-600 font-bold"><i class="fa-solid fa-circle-check mr-1"></i> Klopt! Totaal exact ${total}/${currentRound.cards} slagen.</span>`;
+                    submitBtn.disabled = false;
+                    submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            }
+        }
+
+        function submitCurrentStage() {
+            const currentRound = state.rounds[state.currentRoundIndex];
+            const activePlayers = state.players.filter(p => p.active);
+
+            if (state.stage === 'bidding') {
+                const roundBids = {};
+                activePlayers.forEach(p => {
+                    roundBids[p.id] = (currentInputs[p.id] !== undefined) ? currentInputs[p.id] : 0;
+                });
+
+                state.stage = 'tricks';
+                currentRound.tempBids = roundBids;
+                currentInputs = {};
+
+                saveState();
+                renderGameScreen();
+                showToast("Voorspellingen opgeslagen! Voer nu gehaalde slagen in.", "fa-circle-check text-emerald-400");
+            } else {
+                const roundTricks = {};
+                activePlayers.forEach(p => {
+                    roundTricks[p.id] = (currentInputs[p.id] !== undefined) ? currentInputs[p.id] : 0;
+                });
+
+                const roundBids = currentRound.tempBids;
+                const roundScores = {};
+
+                activePlayers.forEach(p => {
+                    const bid = roundBids[p.id];
+                    const trick = roundTricks[p.id];
+
+                    if (bid === trick) {
+                        roundScores[p.id] = state.settings.basePoints + (trick * state.settings.pointsPerTrick);
+                    } else {
+                        const diff = Math.abs(bid - trick);
+                        roundScores[p.id] = - (diff * state.settings.penaltyPerTrick);
+                    }
+                });
+
+                state.history.push({
+                    roundIndex: state.currentRoundIndex,
+                    bids: roundBids,
+                    tricks: roundTricks,
+                    scores: roundScores,
+                    penalties: {}
+                });
+
+                state.currentRoundIndex++;
+                state.stage = 'bidding';
+                currentInputs = {};
+
+                saveState();
+
+                if (state.currentRoundIndex >= state.rounds.length) {
+                    finishGame();
+                } else {
+                    renderGameScreen();
+                    showToast("Ronde opgeslagen!", "fa-circle-check text-emerald-400");
+                }
+            }
+        }
+
+        function undoLastRound() {
+            if (state.stage === 'tricks') {
+                state.stage = 'bidding';
+                currentInputs = state.rounds[state.currentRoundIndex].tempBids || {};
+                renderGameScreen();
+                return;
+            }
+
+            if (state.history.length > 0) {
+                state.history.pop();
+                state.currentRoundIndex--;
+                state.stage = 'bidding';
+                currentInputs = {};
+                saveState();
+                renderGameScreen();
+                showToast("Laatste ronde ongedaan gemaakt.", "fa-arrow-rotate-left text-slate-400");
+            }
+        }
+
+        function renderScoreboard() {
+            const headerRow = document.getElementById('scoreboard-header-row');
+            const bodyRows = document.getElementById('scoreboard-body-rows');
+            const footerRow = document.getElementById('scoreboard-footer-row');
+
+            headerRow.innerHTML = '<th class="p-3">Ronde</th>';
+            footerRow.innerHTML = '<td class="p-3 font-bold text-slate-800">Totaal</td>';
+
+            const totals = {};
+            state.players.forEach(p => totals[p.id] = 0);
+
+            state.history.forEach(h => {
+                Object.keys(h.scores).forEach(pid => {
+                    totals[pid] += h.scores[pid];
+                });
+                if (h.penalties) {
+                    Object.keys(h.penalties).forEach(pid => {
+                        totals[pid] -= (h.penalties[pid] || 0);
+                    });
+                }
+            });
+
+            let leaderId = null;
+            let maxScore = -Infinity;
+            state.players.forEach(p => {
+                if (totals[p.id] > maxScore) {
+                    maxScore = totals[p.id];
+                    leaderId = p.id;
+                }
+            });
+
+            state.players.forEach(p => {
+                const isLeader = (p.id === leaderId && state.history.length > 0);
+                headerRow.innerHTML += `
+                    <th class="p-3 text-center min-w-[90px]">
+                        <div class="flex items-center justify-center gap-1">
+                            <span>${escapeHtml(p.name)}</span>
+                            ${isLeader ? '<i class="fa-solid fa-trophy text-amber-500 text-xs"></i>' : ''}
+                        </div>
+                    </th>
+                `;
+            });
+
+            bodyRows.innerHTML = '';
+            state.history.forEach((h) => {
+                const rSpec = state.rounds[h.roundIndex];
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-colors";
+
+                let rowHtml = `<td class="p-3 font-bold text-slate-500">R${rSpec.number} (${rSpec.cards}k)</td>`;
+
+                state.players.forEach(p => {
+                    if (h.scores[p.id] !== undefined) {
+                        const bid = h.bids[p.id];
+                        const trick = h.tricks[p.id];
+                        const score = h.scores[p.id];
+                        const pen = (h.penalties && h.penalties[p.id]) ? h.penalties[p.id] : 0;
+                        const isSuccess = (bid === trick);
+
+                        rowHtml += `
+                            <td class="p-3 text-center">
+                                <div class="font-bold ${isSuccess ? 'text-emerald-600' : 'text-rose-600'}">
+                                    ${score >= 0 ? '+' + score : score}
+                                </div>
+                                <div class="text-[10px] text-slate-400">
+                                    ${bid} (${trick}) ${pen > 0 ? `<span class="text-rose-500 font-bold">-${pen}p</span>` : ''}
+                                </div>
+                            </td>
+                        `;
+                    } else {
+                        rowHtml += `<td class="p-3 text-center text-slate-300 font-bold">-</td>`;
+                    }
+                });
+
+                tr.innerHTML = rowHtml;
+                bodyRows.appendChild(tr);
+            });
+
+            state.players.forEach(p => {
+                const isLeader = (p.id === leaderId && state.history.length > 0);
+                footerRow.innerHTML += `
+                    <td class="p-3 text-center">
+                        <div class="text-[11px] font-extrabold text-slate-700 truncate max-w-[100px] mx-auto flex items-center justify-center gap-1">
+                            ${escapeHtml(p.name)}
+                            ${isLeader ? '<i class="fa-solid fa-trophy text-amber-500 text-[10px]"></i>' : ''}
+                        </div>
+                        <div class="text-indigo-600 font-extrabold text-base leading-tight">
+                            ${totals[p.id]} pt
+                        </div>
+                    </td>
+                `;
+            });
+        }
+
+        function showLeaderboard() {
+            const tableElem = document.getElementById('scoreboard-body-rows');
+            if (tableElem) {
+                tableElem.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function openPenaltyModal() {
+            const modal = document.getElementById('penalty-modal');
+            const list = document.getElementById('penalty-player-select');
+            list.innerHTML = '';
+
+            const totalPenalties = {};
+            state.players.forEach(p => totalPenalties[p.id] = 0);
+            state.history.forEach(h => {
+                if (h.penalties) {
+                    Object.keys(h.penalties).forEach(pid => {
+                        totalPenalties[pid] += (h.penalties[pid] || 0);
+                    });
+                }
+            });
+
+            state.players.forEach(p => {
+                const playerPen = totalPenalties[p.id] || 0;
+                const container = document.createElement('div');
+                container.className = "p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2";
+
+                container.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="font-bold text-slate-900 text-sm block">${escapeHtml(p.name)}</span>
+                            <span class="text-[11px] font-semibold text-slate-500">Totaal straf: <strong class="${playerPen > 0 ? 'text-rose-600' : 'text-slate-700'}">-${playerPen} pt</strong></span>
+                        </div>
+                        <button onclick="applyPenalty('${p.id}')" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-lg shadow-sm transition-all flex items-center gap-1">
+                            <i class="fa-solid fa-plus text-[10px]"></i> -${state.settings.penaltyValue} pt
+                        </button>
+                    </div>
+
+                    ${playerPen > 0 ? `
+                        <div class="pt-2 border-t border-slate-200/60 flex justify-end">
+                            <button onclick="undoPenalty('${p.id}')" class="px-2.5 py-1 bg-amber-50 border border-amber-200 text-amber-800 hover:bg-amber-100 font-bold text-[11px] rounded-lg transition-all flex items-center gap-1">
+                                <i class="fa-solid fa-rotate-left text-[10px]"></i> Herstel Strafpunten (+${state.settings.penaltyValue} pt)
+                            </button>
+                        </div>
+                    ` : ''}
+                `;
+                list.appendChild(container);
+            });
+
+            modal.classList.remove('hidden');
+        }
+
+        function closePenaltyModal() {
+            document.getElementById('penalty-modal').classList.add('hidden');
+        }
+
+        function applyPenalty(playerId) {
+            if (state.history.length === 0) {
+                showToast("Speel eerst minstens één ronde om strafpunten toe te wijzen!", "fa-circle-exclamation text-amber-400");
+                return;
+            }
+
+            const lastHistory = state.history[state.history.length - 1];
+            if (!lastHistory.penalties) lastHistory.penalties = {};
+
+            lastHistory.penalties[playerId] = (lastHistory.penalties[playerId] || 0) + state.settings.penaltyValue;
+
+            saveState();
+            openPenaltyModal();
+            renderGameScreen();
+            showToast("Strafpunten toegepast!", "fa-circle-check text-rose-500");
+        }
+
+        function undoPenalty(playerId) {
+            for (let i = state.history.length - 1; i >= 0; i--) {
+                const h = state.history[i];
+                if (h.penalties && h.penalties[playerId] > 0) {
+                    h.penalties[playerId] -= state.settings.penaltyValue;
+                    if (h.penalties[playerId] <= 0) {
+                        delete h.penalties[playerId];
+                    }
+                    saveState();
+                    openPenaltyModal();
+                    renderGameScreen();
+                    showToast("Strafpunten succesvol hersteld!", "fa-circle-check text-emerald-500");
+                    return;
+                }
+            }
+        }
+
+        function openEndGameModal() {
+            document.getElementById('endgame-modal').classList.remove('hidden');
+        }
+
+        function closeEndGameModal() {
+            document.getElementById('endgame-modal').classList.add('hidden');
+        }
+
+        function confirmEarlyEndGame() {
+            closeEndGameModal();
+            finishGame();
+            showToast("Spel vroegtijdig beëindigen.", "fa-flag-checkered text-rose-500");
+        }
+
+        // HISTORY ARCHIVE FUNCTIONS
+        function openHistoryModal() {
+            const modal = document.getElementById('history-modal');
+            const list = document.getElementById('history-game-list');
+            list.innerHTML = '';
+
+            if (!state.savedGames || state.savedGames.length === 0) {
+                list.innerHTML = `
+                    <div class="text-center py-8 text-slate-400">
+                        <i class="fa-solid fa-folder-open text-3xl mb-2 block"></i>
+                        <p class="text-xs font-semibold">Nog geen opgeslagen spellen gevonden.</p>
+                    </div>
+                `;
+            } else {
+                state.savedGames.slice().reverse().forEach((game, idx) => {
+                    const card = document.createElement('div');
+                    card.className = "p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2";
+
+                    const sortedPlayers = [...game.players].sort((a, b) => (game.totals[b.id] || 0) - (game.totals[a.id] || 0));
+                    const winner = sortedPlayers[0];
+
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                            <span class="text-xs font-bold text-slate-500"><i class="fa-solid fa-calendar-day mr-1"></i>${game.date}</span>
+                            <span class="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 text-[10px] font-bold border border-indigo-200">${game.roundsPlayed} Rondes Gespeeld</span>
+                        </div>
+                        <div class="flex items-center justify-between pt-1">
+                            <div>
+                                <span class="text-xs font-bold text-slate-900 block"><i class="fa-solid fa-trophy text-amber-500 mr-1"></i>Winnaar: ${escapeHtml(winner ? winner.name : 'Onbekend')}</span>
+                                <span class="text-[11px] text-slate-500">Score: ${winner ? game.totals[winner.id] : 0} pt</span>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-[11px] font-semibold text-slate-600 block">Deelnemers:</span>
+                                <span class="text-[10px] text-slate-400">${game.players.map(p => escapeHtml(p.name)).join(', ')}</span>
+                            </div>
+                        </div>
+                    `;
+                    list.appendChild(card);
+                });
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeHistoryModal() {
+            document.getElementById('history-modal').classList.add('hidden');
+        }
+
+        function clearAllHistory() {
+            if (confirm("Weet je zeker dat je alle opgeslagen spellen wilt wissen?")) {
+                state.savedGames = [];
+                saveState();
+                openHistoryModal();
+                showToast("Historie gewist.", "fa-trash-can text-rose-500");
+            }
+        }
+
+        let selectedRematchDealerId = null;
+
+        function openRematchModal() {
+            const modal = document.getElementById('rematch-modal');
+            const list = document.getElementById('rematch-dealer-list');
+            list.innerHTML = '';
+
+            const currentDealerId = state.players.find(p => p.firstDealer)?.id;
+            let currentIdx = state.players.findIndex(p => p.id === currentDealerId);
+            if (currentIdx < 0) currentIdx = 0;
+            
+            let nextIdx = (currentIdx + 1) % state.players.length;
+            selectedRematchDealerId = state.players[nextIdx].id;
+
+            state.players.forEach(p => {
+                const isSelected = (p.id === selectedRematchDealerId);
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = `w-full p-3 rounded-xl border flex items-center justify-between text-left font-bold text-sm transition-all ${isSelected ? 'bg-amber-50 border-amber-300 text-slate-900' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'}`;
+                btn.onclick = () => selectRematchDealer(p.id);
+
+                btn.innerHTML = `
+                    <span class="flex items-center gap-2">
+                        <i class="fa-solid fa-crown ${isSelected ? 'text-amber-500' : 'text-slate-300'}"></i>
+                        ${escapeHtml(p.name)}
+                    </span>
+                    ${isSelected ? '<span class="text-xs bg-amber-500 text-white px-2 py-0.5 rounded-full">Eerste Deler</span>' : ''}
+                `;
+                list.appendChild(btn);
+            });
+
+            modal.classList.remove('hidden');
+        }
+
+        function selectRematchDealer(id) {
+            selectedRematchDealerId = id;
+            openRematchModal();
+        }
+
+        function closeRematchModal() {
+            document.getElementById('rematch-modal').classList.add('hidden');
+        }
+
+        function confirmRematch() {
+            if (selectedRematchDealerId) {
+                setFirstDealer(selectedRematchDealerId);
+            }
+            closeRematchModal();
+            startGame();
+        }
+
+        function finishGame() {
+            switchScreen('gameover');
+
+            const totals = {};
+            state.players.forEach(p => totals[p.id] = 0);
+
+            state.history.forEach(h => {
+                Object.keys(h.scores).forEach(pid => {
+                    totals[pid] += h.scores[pid];
+                });
+                if (h.penalties) {
+                    Object.keys(h.penalties).forEach(pid => {
+                        totals[pid] -= (h.penalties[pid] || 0);
+                    });
+                }
+            });
+
+            const sorted = [...state.players].sort((a, b) => totals[b.id] - totals[a.id]);
+            const winner = sorted[0];
+
+            document.getElementById('winner-name').innerText = `${winner.name} Wint!`;
+            document.getElementById('winner-score').innerText = `Eindscore: ${totals[winner.id]} punten`;
+
+            const list = document.getElementById('final-leaderboard');
+            list.innerHTML = '';
+
+            sorted.forEach((p, idx) => {
+                const row = document.createElement('div');
+                row.className = "flex items-center justify-between p-3 bg-white rounded-lg border border-slate-200 font-bold text-sm";
+                row.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${idx === 0 ? 'bg-amber-100 text-amber-700' : 'bg-slate-200 text-slate-600'}">
+                            ${idx + 1}
+                        </span>
+                        <span>${escapeHtml(p.name)}</span>
+                    </div>
+                    <span class="text-indigo-600">${totals[p.id]} pt</span>
+                `;
+                list.appendChild(row);
+            });
+
+            // Archive game in savedGames
+            if (!state.savedGames) state.savedGames = [];
+            state.savedGames.push({
+                date: new Date().toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' }),
+                players: [...state.players],
+                totals: totals,
+                roundsPlayed: state.history.length
+            });
+
+            saveState();
+        }
+
+        function resetGameToSetup() {
+            state.gameStarted = false;
+            state.currentRoundIndex = 0;
+            state.stage = 'bidding';
+            state.history = [];
+            state.rounds = [];
+            saveState();
+            switchScreen('setup');
+            renderSetupScreen();
+        }
+    </script>
+</body>
+</html>
